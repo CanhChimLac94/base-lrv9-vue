@@ -2,7 +2,6 @@
 
 namespace Illuminate\Support;
 
-use ArgumentCountError;
 use ArrayAccess;
 use Illuminate\Support\Traits\Macroable;
 use InvalidArgumentException;
@@ -459,26 +458,12 @@ class Arr
      * Key an associative array by a field or using a callback.
      *
      * @param  array  $array
-     * @param  callable|array|string  $keyBy
+     * @param  callable|array|string
      * @return array
      */
     public static function keyBy($array, $keyBy)
     {
         return Collection::make($array)->keyBy($keyBy)->all();
-    }
-
-    /**
-     * Prepend the key names of an associative array.
-     *
-     * @param  array  $array
-     * @param  string  $prependWith
-     * @return array
-     */
-    public static function prependKeysWith($array, $prependWith)
-    {
-        return Collection::make($array)->mapWithKeys(function ($item, $key) use ($prependWith) {
-            return [$prependWith.$key => $item];
-        })->all();
     }
 
     /**
@@ -546,26 +531,6 @@ class Arr
     }
 
     /**
-     * Run a map over each of the items in the array.
-     *
-     * @param  array  $array
-     * @param  callable  $callback
-     * @return array
-     */
-    public static function map(array $array, callable $callback)
-    {
-        $keys = array_keys($array);
-
-        try {
-            $items = array_map($callback, $array, $keys);
-        } catch (ArgumentCountError) {
-            $items = array_map($callback, $array);
-        }
-
-        return array_combine($keys, $items);
-    }
-
-    /**
      * Push an item onto the beginning of an array.
      *
      * @param  array  $array
@@ -588,7 +553,7 @@ class Arr
      * Get a value from the array, and remove it.
      *
      * @param  array  $array
-     * @param  string|int  $key
+     * @param  string  $key
      * @param  mixed  $default
      * @return mixed
      */

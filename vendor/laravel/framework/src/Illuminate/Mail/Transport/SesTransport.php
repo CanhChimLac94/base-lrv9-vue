@@ -51,7 +51,7 @@ class SesTransport extends AbstractTransport
         if ($message->getOriginalMessage() instanceof Message) {
             foreach ($message->getOriginalMessage()->getHeaders()->all() as $header) {
                 if ($header instanceof MetadataHeader) {
-                    $options['Tags'][] = ['Name' => $header->getKey(), 'Value' => $header->getValue()];
+                    $options['EmailTags'][] = ['Name' => $header->getKey(), 'Value' => $header->getValue()];
                 }
             }
         }
@@ -73,13 +73,7 @@ class SesTransport extends AbstractTransport
                 )
             );
         } catch (AwsException $e) {
-            $reason = $e->getAwsErrorMessage() ?? $e->getMessage();
-
-            throw new Exception(
-                sprintf('Request to AWS SES API failed. Reason: %s.', $reason),
-                is_int($e->getCode()) ? $e->getCode() : 0,
-                $e
-            );
+            throw new Exception('Request to AWS SES API failed.', $e->getCode(), $e);
         }
 
         $messageId = $result->get('MessageId');

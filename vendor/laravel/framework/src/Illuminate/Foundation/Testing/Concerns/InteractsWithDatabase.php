@@ -69,22 +69,6 @@ trait InteractsWithDatabase
     }
 
     /**
-     * Assert that the given table has no entries.
-     *
-     * @param  \Illuminate\Database\Eloquent\Model|string  $table
-     * @param  string|null  $connection
-     * @return $this
-     */
-    protected function assertDatabaseEmpty($table, $connection = null)
-    {
-        $this->assertThat(
-            $this->getTable($table), new CountInDatabase($this->getConnection($connection, $table), 0)
-        );
-
-        return $this;
-    }
-
-    /**
      * Assert the given record has been "soft deleted".
      *
      * @param  \Illuminate\Database\Eloquent\Model|string  $table
@@ -183,7 +167,7 @@ trait InteractsWithDatabase
     /**
      * Cast a JSON string to a database compatible type.
      *
-     * @param  array|object|string  $value
+     * @param  array|string  $value
      * @return \Illuminate\Database\Query\Expression
      */
     public function castAsJson($value)
@@ -196,9 +180,7 @@ trait InteractsWithDatabase
 
         $value = DB::connection()->getPdo()->quote($value);
 
-        return DB::raw(
-            DB::connection()->getQueryGrammar()->compileJsonValueCast($value)
-        );
+        return DB::raw("CAST($value AS JSON)");
     }
 
     /**

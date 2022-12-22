@@ -3,7 +3,6 @@
 namespace Illuminate\Validation;
 
 use Closure;
-use Illuminate\Contracts\Validation\InvokableRule;
 use Illuminate\Contracts\Validation\Rule as RuleContract;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
@@ -115,10 +114,6 @@ class ValidationRuleParser
             $rule = new ClosureValidationRule($rule);
         }
 
-        if ($rule instanceof InvokableRule) {
-            $rule = InvokableValidationRule::make($rule);
-        }
-
         if (! is_object($rule) ||
             $rule instanceof RuleContract ||
             ($rule instanceof Exists && $rule->queryCallbacks()) ||
@@ -151,7 +146,7 @@ class ValidationRuleParser
 
         foreach ($data as $key => $value) {
             if (Str::startsWith($key, $attribute) || (bool) preg_match('/^'.$pattern.'\z/', $key)) {
-                foreach ((array) $rules as $rule) {
+                foreach (Arr::flatten((array) $rules) as $rule) {
                     if ($rule instanceof NestedRules) {
                         $compiled = $rule->compile($key, $value, $data);
 

@@ -17,7 +17,7 @@ class HandleExceptions
     /**
      * Reserved memory so that errors can be displayed properly on memory exhaustion.
      *
-     * @var string|null
+     * @var string
      */
     public static $reservedMemory;
 
@@ -36,7 +36,7 @@ class HandleExceptions
      */
     public function bootstrap(Application $app)
     {
-        self::$reservedMemory = str_repeat('x', 32768);
+        self::$reservedMemory = str_repeat('x', 10240);
 
         static::$app = $app;
 
@@ -102,7 +102,10 @@ class HandleExceptions
      */
     public function handleDeprecationError($message, $file, $line, $level = E_DEPRECATED)
     {
-        if ($this->shouldIgnoreDeprecationErrors()) {
+        if (! class_exists(LogManager::class)
+            || ! static::$app->hasBeenBootstrapped()
+            || static::$app->runningUnitTests()
+        ) {
             return;
         }
 
@@ -128,18 +131,6 @@ class HandleExceptions
     }
 
     /**
-     * Determine if deprecation errors should be ignored.
-     *
-     * @return bool
-     */
-    protected function shouldIgnoreDeprecationErrors()
-    {
-        return ! class_exists(LogManager::class)
-            || ! static::$app->hasBeenBootstrapped()
-            || static::$app->runningUnitTests();
-    }
-
-    /**
      * Ensure the "deprecations" logger is configured.
      *
      * @return void
@@ -153,11 +144,9 @@ class HandleExceptions
 
             $this->ensureNullLogDriverIsConfigured();
 
-            if (is_array($options = $config->get('logging.deprecations'))) {
-                $driver = $options['channel'] ?? 'null';
-            } else {
-                $driver = $options ?? 'null';
-            }
+            $options = $config->get('logging.deprecations');
+
+            $driver = is_array($options) ? $options['channel'] : ($options ?? 'null');
 
             $config->set('logging.channels.deprecations', $config->get("logging.channels.{$driver}"));
         });
@@ -194,9 +183,9 @@ class HandleExceptions
      */
     public function handleException(Throwable $e)
     {
-        self::$reservedMemory = null;
-
         try {
+            self::$reservedMemory = null;
+
             $this->getExceptionHandler()->report($e);
         } catch (Exception $e) {
             //
@@ -238,8 +227,6 @@ class HandleExceptions
      */
     public function handleShutdown()
     {
-        self::$reservedMemory = null;
-
         if (! is_null($error = error_get_last()) && $this->isFatal($error['type'])) {
             $this->handleException($this->fatalErrorFromPhpError($error, 0));
         }
