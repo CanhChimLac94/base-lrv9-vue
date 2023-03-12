@@ -1,0 +1,3 @@
+<template>
+  <client-news />
+</template>
